@@ -23,9 +23,16 @@ points_metadata <- points %>%
 tourist_road_info <- get_national_tourist_roads()
 
 # NB! Never view the geometry - slows everything!
+tourist_road_geometry <- tourist_road_info$geometri
+
+tourist_road_geometry %>%
+  saveRDS(file = "data/tourist_road_geometry.rds")
+
 tourist_roads <- tourist_road_info$geometri %>%
   sf::st_drop_geometry() %>%
-  dplyr::select(objekt_id, Navn) %>%
+  dplyr::select(objekt_id, Navn)
+
+tourist_roads %>%
   saveRDS(file = "data/tourist_road_names.rds")
 
 trps_on_tourist_roads <- points_metadata %>%
@@ -34,6 +41,37 @@ trps_on_tourist_roads <- points_metadata %>%
                    by = c("road_network_link" = "veglenkesekvensid")) %>%
   dplyr::distinct(trp_id, .keep_all = TRUE)
 
+trps_on_tourist_roads %>%
+  saveRDS(file = "data/trps_on_tourist_roads.rds")
+
 n_points_per_road <- trps_on_tourist_roads %>%
   dplyr::group_by(Navn) %>%
   dplyr::summarise(n_trps = n())
+
+# MDTs ----
+mdt_2019 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2019")
+mdt_2020 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2020")
+mdt_2021 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2021")
+
+mdts <- dplyr::bind_rows(
+  mdt_2019,
+  mdt_2020,
+  mdt_2021
+) %>%
+  dplyr::filter(coverage > 50,
+                month %in% c(6, 7, 8)) %>%
+  dplyr::select(trp_id, year, month, mdt) %>%
+  tidyr::complete(trp_id = trps_on_tourist_roads$trp_id, year, month)
+
+trp_mdt <- trps_on_tourist_roads %>%
+  dplyr::left_join(mdts, by = "trp_id") %>%
+  dplyr::mutate(month_object = lubridate::make_date(year = year, month = month),
+                month_name = lubridate::month(month_object, label = TRUE, abbr = FALSE)) %>%
+  dplyr::select(Navn, trp_id, name, road_category_and_number, year, month_name, mdt) %>%
+  tidyr::pivot_wider(names_from = month_name, values_from = mdt) %>%
+  dplyr::select(Navn, name, road_category_and_number, year:august)
+
+# TODO: sort på roadref
+
+trp_mdt %>%
+  saveRDS(file = "data/trp_mdt.rds")

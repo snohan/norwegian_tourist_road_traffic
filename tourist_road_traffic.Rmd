@@ -4,8 +4,7 @@ knit: (function(input_file, encoding){
   rmarkdown::render(input_file, encoding=encoding, output_file = 'docs/index.html')})
 output: 
   html_document:
-    css: "svv.css"
-    theme: cerulean
+    css: svv.css
     number_sections: true
     toc: true
     toc_float: 
@@ -22,9 +21,15 @@ source("H:/Programmering/R/byindeks/rmd_setup.R")
 ```{r get_data}
 # Load prepared data (avoiding fetching all data for every knit!)
 tourist_road_names <- readRDS(file = "data/tourist_road_names.rds")
+
+tourist_road_geometry <- readRDS(file = "data/tourist_road_geometry.rds")
+
+trps_on_tourist_roads <- readRDS(file = "data/trps_on_tourist_roads.rds")
+
+trp_mdt <- readRDS(file = "data/trp_mdt.rds")
 ```
 
-```{r tourist_roads}
+```{r tourist_data}
 
 ```
 
@@ -33,24 +38,65 @@ tourist_road_names <- readRDS(file = "data/tourist_road_names.rds")
 ```
 
 
-# Nasjonale turistveger
+Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
 
-Det finnes i dag 18 Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken. 
+Øvrig informasjom om turistvegene på finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
-Du kan lese mer om turistvegene på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
 ```{r tourist_road_table}
-tourist_road_names %>% 
-  dplyr::select(Turistveg = Navn) %>% 
+#tourist_road_names %>% 
+trps_on_tourist_roads %>% 
+  dplyr::select(Turistveg = Navn, lengde = lokasjon.lengde) %>% 
+  dplyr::distinct() %>% 
+  dplyr::arrange(Turistveg) %>% 
+  dplyr::mutate(lengde = lengde / 1000) %>% 
   flextable::flextable() %>% 
+  set_header_labels(Turistveg = "Nasjonal turistveg",
+                    lengde = "Lengde \n (km)") %>% 
+  colformat_double(j = 2, digits = 0) %>% 
   bold(part = "header") %>%
   bg(bg = "#ED9300", part = "header") %>%
   border_remove() %>%
   hline_top(part = "header", border = borderline) %>%
   hline_bottom(part = "all", border = borderline) %>%
-  autofit() %>%
-  height_all(height = .2) %>%
-  set_caption("Nasjonale turistveger.")
+  padding(padding.top = .5,
+          padding.bottom = .3,
+          part = "body") %>% 
+  set_table_properties(width = .35, 
+                       layout = "autofit") %>% 
+  autofit(add_h = 0.2) %>%
+  #height_all(height = 5, part = "body") %>%
+  set_caption(caption = "Nasjonale turistveger.")
+```
+
+
+# `r tourist_road_names$Navn[1]`
+
+```{r tourist_road_table_1}
+caption_text <- paste0("Gjennomsnittlig daglig antall kjøretøy ved utvalgte punkter på Nasjonal turistveg ",
+                       tourist_road_names$Navn[1], ".")
+
+trp_mdt %>% 
+  dplyr::filter(Navn == tourist_road_names$Navn[1]) %>% 
+  dplyr::select(-Navn) %>% 
+  flextable::flextable() %>%
+  set_header_labels(name = "Sted",
+                    road_category_and_number = "Veg",
+                    year = "År") %>% 
+  colformat_int(j = 3, big.mark = "") %>% 
+  bold(part = "header") %>%
+  bg(bg = "#ED9300", part = "header") %>%
+  border_remove() %>%
+  hline_top(part = "header", border = borderline) %>%
+  hline_bottom(part = "all", border = borderline) %>%
+  padding(padding.top = .5,
+          padding.bottom = .3,
+          part = "body") %>% 
+  #set_table_properties(width = .25, 
+  #                     layout = "autofit") %>% 
+  autofit(add_h = 0.2) %>%
+  #height_all(height = 5, part = "body") %>%
+  set_caption(caption = caption_text)
 
 
 # Looking at just summer months 6-8.
@@ -59,5 +105,6 @@ tourist_road_names %>%
 # TODO: pointindex 2021
 ```
 
+# `r tourist_road_names$Navn[2]`
 
 
