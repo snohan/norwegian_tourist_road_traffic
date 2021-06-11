@@ -1,8 +1,10 @@
 ---
 title: "Nasjonale turistveger og trafikkmengde"
-knit: (function(input_file, encoding){rmarkdown::render(input_file, encoding=encoding, output_file = 'docs/index.html')})
+knit: (function(input_file, encoding){
+  rmarkdown::render(input_file, encoding=encoding, output_file = 'docs/index.html')})
 output: 
   html_document:
+    css: "svv.css"
     theme: cerulean
     number_sections: true
     toc: true
@@ -12,35 +14,50 @@ output:
     toc_depth: 4
 ---
 
-```{r setup, message=F, include=FALSE}
-library(tidyverse)
-library(knitr)
-library(lubridate)
-
-knitr::opts_chunk$set(echo = FALSE,
-                      warning = FALSE,
-                      message = FALSE,
-                      error = FALSE,
-                      cache = TRUE,
-                      dev = "ragg_png")
+```{r setup, include = FALSE, echo = FALSE, warning=FALSE, message=FALSE}
+# Packages are loaded through sourcing rmd_setup.R
+source("H:/Programmering/R/byindeks/rmd_setup.R")
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r get_data}
+# Load prepared data (avoiding fetching all data for every knit!)
+tourist_road_names <- readRDS(file = "data/tourist_road_names.rds")
 ```
 
-## Including Plots
+```{r tourist_roads}
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r tourist_road_map}
+
+```
+
+
+# Nasjonale turistveger
+
+Det finnes i dag 18 Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken. 
+
+Du kan lese mer om turistvegene på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
+
+```{r tourist_road_table}
+tourist_road_names %>% 
+  dplyr::select(Turistveg = Navn) %>% 
+  flextable::flextable() %>% 
+  bold(part = "header") %>%
+  bg(bg = "#ED9300", part = "header") %>%
+  border_remove() %>%
+  hline_top(part = "header", border = borderline) %>%
+  hline_bottom(part = "all", border = borderline) %>%
+  autofit() %>%
+  height_all(height = .2) %>%
+  set_caption("Nasjonale turistveger.")
+
+
+# Looking at just summer months 6-8.
+# TODO: sdt summer 2019, 2020
+# TODO: pointindex 2019-2020, 2020-2021, 2019-2021
+# TODO: pointindex 2021
+```
+
+
+
