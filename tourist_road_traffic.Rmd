@@ -76,7 +76,10 @@ Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapport
 ```{r tourist_road_table}
 #tourist_road_names %>% 
 trps_on_tourist_roads %>% 
-  dplyr::select(Turistveg = Navn, lengde = lokasjon.lengde, n_trps) %>% 
+  dplyr::select(Turistveg = Navn, 
+                Fylker = counties,
+                Veger = roads,
+                lengde = lokasjon.lengde, n_trps) %>% 
   dplyr::distinct() %>% 
   dplyr::arrange(Turistveg) %>% 
   dplyr::mutate(lengde = lengde / 1000) %>% 
@@ -84,8 +87,8 @@ trps_on_tourist_roads %>%
   fontsize(size = 11, part = "all") %>% 
   set_header_labels(Turistveg = "Nasjonal turistveg",
                     lengde = "Lengde\n (km)",
-                    n_trps = "Antall trafikk-\n registreringspunkt") %>% 
-  colformat_double(j = 2, digits = 0) %>% 
+                    n_trps = "Antall trafikk-\n registrerings-\npunkt") %>% 
+  colformat_double(j = c("lengde"), digits = 0) %>% 
   bold(part = "header") %>%
   bg(bg = "#ED9300", part = "header") %>%
   border_remove() %>%
@@ -94,7 +97,7 @@ trps_on_tourist_roads %>%
   padding(padding.top = .5,
           padding.bottom = .3,
           part = "body") %>% 
-  set_table_properties(width = .45, 
+  set_table_properties(width = .9, 
                        layout = "autofit") %>% 
   autofit(add_h = 0.2) %>%
   #height_all(height = 5, part = "body") %>%

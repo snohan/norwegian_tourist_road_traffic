@@ -43,20 +43,38 @@ trps_on_tourist_roads <- points_metadata %>%
   dplyr::filter(road_network_link %in% tourist_road_info$veglenkeposisjoner$veglenkesekvensid) %>%
   dplyr::left_join(tourist_road_info$veglenkeposisjoner,
                    by = c("road_network_link" = "veglenkesekvensid")) %>%
-  dplyr::distinct(trp_id, .keep_all = TRUE)
+  dplyr::distinct(trp_id, .keep_all = TRUE) %>%
+  dplyr::mutate(road_category_and_number_and_point_name =
+                  paste0(road_category_and_number, " ", name))
 
 n_points_per_road <- trps_on_tourist_roads %>%
   dplyr::group_by(objekt_id) %>%
   dplyr::summarise(n_trps = n())
 
+# road_names, but do we have a trp on all?
+road_names_per_road <- trps_on_tourist_roads %>%
+  dplyr::select(objekt_id, road_category_and_number) %>%
+  dplyr::distinct() %>%
+  dplyr::group_by(objekt_id) %>%
+  dplyr::summarise(roads = paste(road_category_and_number, collapse = ", "))
+
+counties_per_road <- trps_on_tourist_roads %>%
+  dplyr::select(objekt_id, county_name) %>%
+  dplyr::distinct() %>%
+  dplyr::group_by(objekt_id) %>%
+  dplyr::summarise(counties = paste(county_name, collapse = ", "))
+
 trps_on_tourist_roads <- trps_on_tourist_roads %>%
-  dplyr::left_join(n_points_per_road, by = "objekt_id")
+  dplyr::left_join(n_points_per_road, by = "objekt_id") %>%
+  dplyr::left_join(road_names_per_road, by = "objekt_id") %>%
+  dplyr::left_join(counties_per_road, by = "objekt_id")
 
 trps_on_tourist_roads %>%
   saveRDS(file = "data/trps_on_tourist_roads.rds")
 
 
 # MDTs ----
+# 2018?
 mdt_2019 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2019")
 mdt_2020 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2020")
 mdt_2021 <- get_mdt_for_trp_list(trps_on_tourist_roads$trp_id, "2021")
