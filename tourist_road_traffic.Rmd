@@ -10,12 +10,14 @@ output:
     toc_float: 
       collapsed: false
       smooth_scroll: false
-    toc_depth: 4
+    toc_depth: 2
+fig_width: 5
 ---
 
 ```{r setup, include = FALSE, echo = FALSE, warning=FALSE, message=FALSE}
 # Packages are loaded through sourcing rmd_setup.R
 source("H:/Programmering/R/byindeks/rmd_setup.R")
+svv_background_color <- "#F5F5F5"
 ```
 
 ```{r get_data}
@@ -28,39 +30,51 @@ trps_on_tourist_roads <- readRDS(file = "data/trps_on_tourist_roads.rds")
 
 trp_mdt_wide <- readRDS(file = "data/trp_mdt_wide.rds")
 trp_mdt_long <- readRDS(file = "data/trp_mdt_long.rds")
+
+index_per_road_and_per_month <-
+  readRDS(file = "data/index_per_road_and_per_month.rds")
+
+index_summer_and_month <-
+  readRDS(file = "data/index_summer_and_month.rds")
 ```
 
 ```{r functions}
 create_mdt_plot <- function(trp_mdt_long_format, road_number) {
   
   trp_mdt_long_format %>% 
-    dplyr::filter(Navn == tourist_road_names$Navn[road_number]) %>% 
+    dplyr::filter(Navn == tourist_road_names$Navn[road_number],
+                  !is.na(mdt)) %>% 
     dplyr::select(-Navn) %>%
     dplyr::mutate(year = as.character(year)) %>% 
     ggplot2::ggplot(aes(x = month_object, y = mdt, color = year)) +
     ggplot2::geom_line() +
     ggplot2::geom_point() +
-    ggplot2::facet_grid(rows = vars(name),
+    ggplot2::facet_grid(rows = vars(road_category_and_number_and_point_name),
                         labeller = label_wrap_gen(width = 12)) +
-    theme_light() +
+    theme_light(base_size = 10) +
     theme(axis.text.x = element_text(angle = 90),
           panel.grid.minor.x = element_blank(),
-          strip.text.y = element_text(angle = 90)) +
+          panel.grid.minor.y = element_blank(),
+          strip.text.y = element_text(angle = 90),
+          plot.background = element_rect(fill = svv_background_color),
+          panel.background = element_rect(fill = svv_background_color),
+          legend.position = "bottom",
+          legend.background = element_rect(fill = svv_background_color),
+          legend.key = element_blank()) +
     scale_x_date(breaks = scales::breaks_width("months"),
                  labels = scales::label_date("%b")) +
-    scale_color_manual(values = c("2019" = "#008ec2",
+    scale_color_manual(values = c(
+                                  "2018" = "#ed1c2e",
+                                  "2019" = "#008ec2",
                                   "2020" = "#ed9300"#,
                                   #"tunge" = "#444f55"
-                                  ),
+                                ),
                        name = "År") +
     labs(x = NULL, y = "Månedsdøgntrafikk \n",
          caption = "Data: Statens vegvesen og fylkeskommunene") +
     ggtitle("Gjennomsnittlig antall kjøretøy per dag",
-            subtitle = "") +
-    theme(legend.position = "bottom")  
+            subtitle = "")
 }
-
-
 ```
 
 ```{r tourist_road_map}
@@ -70,7 +84,7 @@ create_mdt_plot <- function(trp_mdt_long_format, road_number) {
 
 Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
 
-Øvrig informasjom om turistvegene på finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
+Mer informasjom om turistvegene finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
 
 ```{r tourist_road_table}
@@ -84,7 +98,7 @@ trps_on_tourist_roads %>%
   dplyr::arrange(Turistveg) %>% 
   dplyr::mutate(lengde = lengde / 1000) %>% 
   flextable::flextable() %>% 
-  fontsize(size = 11, part = "all") %>% 
+  fontsize(size = 12, part = "all") %>% 
   set_header_labels(Turistveg = "Nasjonal turistveg",
                     lengde = "Lengde\n (km)",
                     n_trps = "Antall trafikk-\n registrerings-\npunkt") %>% 
@@ -97,7 +111,7 @@ trps_on_tourist_roads %>%
   padding(padding.top = .5,
           padding.bottom = .3,
           part = "body") %>% 
-  set_table_properties(width = .9, 
+  set_table_properties(width = 1, 
                        layout = "autofit") %>% 
   autofit(add_h = 0.2) %>%
   #height_all(height = 5, part = "body") %>%
@@ -138,143 +152,250 @@ trps_on_tourist_roads %>%
 # TODO: sdt summer 2019, 2020
 # TODO: pointindex 2019-2020, 2020-2021, 2019-2021
 # TODO: pointindex 2021
+create_index_table_for_a_road <- function(index_df, tourist_road_number) {
+  
+  caption_text <- paste0("Endring i trafikkmengde (%) på Nasjonal turistveg ",
+                       tourist_road_names$Navn[tourist_road_number], ".")
+
+  index_per_road_and_per_month %>%
+    dplyr::filter(Navn == tourist_road_names$Navn[tourist_road_number]) %>%
+    dplyr::select(-Navn) %>%
+    flextable::flextable() %>%
+    fontsize(size = 12, part = "all") %>% 
+    set_header_labels(index_period = "Periode",
+                      summer = "juni - august") %>%
+    colformat_double(j = 2:5, big.mark = "", digits = 1) %>%
+    bold(part = "header") %>%
+    bg(bg = "#ED9300", part = "header") %>%
+    border_remove() %>%
+    hline_top(part = "header", border = borderline) %>%
+    hline_bottom(part = "all", border = borderline) %>%
+    padding(padding.top = .5,
+            padding.bottom = .3,
+            part = "body") %>%
+    #set_table_properties(width = .25,
+    #                     layout = "autofit") %>%
+    autofit(add_h = 0.2) %>%
+    #height_all(height = 5, part = "body") %>%
+    set_caption(caption = caption_text)
+}
 ```
 
-```{r plot_1, fig.width=5.5, fig.height=5}
+```{r plot_1, fig.height=5}
 create_mdt_plot(trp_mdt_long, 1)
+```
+
+```{r table_1}
+create_index_table_for_a_road(index_per_road_and_per_month, 1)
 ```
 
 
 
 # `r tourist_road_names$Navn[2]`
 
-```{r plot_2, fig.width=5.5, fig.height=5}
+```{r plot_2, fig.height=5}
 create_mdt_plot(trp_mdt_long, 2)
 ```
 
+```{r table_2}
+create_index_table_for_a_road(index_per_road_and_per_month, 2)
+```
 
 # `r tourist_road_names$Navn[3]`
 
-```{r plot_3, fig.width=5.5, fig.height=4}
+```{r plot_3, fig.height=4}
 create_mdt_plot(trp_mdt_long, 3)
 ```
 
+```{r table_3}
+create_index_table_for_a_road(index_per_road_and_per_month, 3)
+```
 
 
 # `r tourist_road_names$Navn[4]`
 
-```{r plot_4, fig.width=5.5, fig.height=3}
+```{r plot_4, fig.height=3}
 create_mdt_plot(trp_mdt_long, 4)
 ```
 
+```{r table_4}
+create_index_table_for_a_road(index_per_road_and_per_month, 4)
+```
 
 
 # `r tourist_road_names$Navn[5]`
 
-```{r plot_5, fig.width=5.5, fig.height=3}
+```{r plot_5, fig.height=3}
 create_mdt_plot(trp_mdt_long, 5)
 ```
 
+```{r table_5}
+create_index_table_for_a_road(index_per_road_and_per_month, 5)
+```
 
 
 # `r tourist_road_names$Navn[6]`
 
-```{r plot_6, fig.width=5.5, fig.height=11}
+```{r plot_6, fig.height=11}
 create_mdt_plot(trp_mdt_long, 6)
 ```
 
+```{r table_6}
+create_index_table_for_a_road(index_per_road_and_per_month, 6)
+```
 
 
 # `r tourist_road_names$Navn[7]`
 
-```{r plot_7, fig.width=5.5, fig.height=8}
+```{r plot_7, fig.height=8}
 create_mdt_plot(trp_mdt_long, 7)
 ```
 
+```{r table_7}
+create_index_table_for_a_road(index_per_road_and_per_month, 7)
+```
 
 
 # `r tourist_road_names$Navn[8]`
 
-```{r plot_8, fig.width=5.5, fig.height=5}
+```{r plot_8, fig.height=5}
 create_mdt_plot(trp_mdt_long, 8)
 ```
 
+```{r table_8}
+create_index_table_for_a_road(index_per_road_and_per_month, 8)
+```
 
 
 # `r tourist_road_names$Navn[9]`
 
-```{r plot_9, fig.width=5.5, fig.height=3}
+```{r plot_9, fig.height=3}
 create_mdt_plot(trp_mdt_long, 9)
 ```
 
+```{r table_9}
+create_index_table_for_a_road(index_per_road_and_per_month, 9)
+```
 
 
 # `r tourist_road_names$Navn[10]`
 
-```{r plot_10, fig.width=5.5, fig.height=14}
+```{r plot_10, fig.height=14}
 create_mdt_plot(trp_mdt_long, 10)
 ```
 
+```{r table_10}
+create_index_table_for_a_road(index_per_road_and_per_month, 10)
+```
 
 
 # `r tourist_road_names$Navn[11]`
 
-```{r plot_11, fig.width=5.5, fig.height=7}
+```{r plot_11, fig.height=7}
 create_mdt_plot(trp_mdt_long, 11)
 ```
 
+```{r table_11}
+create_index_table_for_a_road(index_per_road_and_per_month, 11)
+```
 
 
 # `r tourist_road_names$Navn[12]`
 
-```{r plot_12, fig.width=5.5, fig.height=16}
+```{r plot_12, fig.height=16}
 create_mdt_plot(trp_mdt_long, 12)
 ```
 
+```{r table_12}
+create_index_table_for_a_road(index_per_road_and_per_month, 12)
+```
 
 
 # `r tourist_road_names$Navn[13]`
 
-```{r plot_13, fig.width=5.5, fig.height=5}
+```{r plot_13, fig.height=5}
 create_mdt_plot(trp_mdt_long, 13)
 ```
 
+```{r table_13}
+create_index_table_for_a_road(index_per_road_and_per_month, 13)
+```
 
 # `r tourist_road_names$Navn[14]`
 
-```{r plot_14, fig.width=5.5, fig.height=16}
+```{r plot_14, fig.height=16}
 create_mdt_plot(trp_mdt_long, 14)
 ```
 
+```{r table_14}
+create_index_table_for_a_road(index_per_road_and_per_month, 14)
+```
 
 
 # `r tourist_road_names$Navn[15]`
 
-```{r plot_15, fig.width=5.5, fig.height=5}
+```{r plot_15, fig.height=5}
 create_mdt_plot(trp_mdt_long, 15)
 ```
 
+```{r table_15}
+create_index_table_for_a_road(index_per_road_and_per_month, 15)
+```
 
 
 # `r tourist_road_names$Navn[16]`
 
-```{r plot_16, fig.width=5.5, fig.height=5}
+```{r plot_16, fig.height=5}
 create_mdt_plot(trp_mdt_long, 16)
 ```
 
+```{r table_16}
+create_index_table_for_a_road(index_per_road_and_per_month, 16)
+```
 
 
 # `r tourist_road_names$Navn[17]`
 
-```{r plot_17, fig.width=5.5, fig.height=4}
+```{r plot_17, fig.height=4}
 create_mdt_plot(trp_mdt_long, 17)
 ```
 
+```{r table_17}
+create_index_table_for_a_road(index_per_road_and_per_month, 17)
+```
 
 # `r tourist_road_names$Navn[18]`
 
-```{r plot_18, fig.width=5.5, fig.height=7}
+```{r plot_18, fig.height=7}
 create_mdt_plot(trp_mdt_long, 18)
 ```
 
+```{r table_18}
+create_index_table_for_a_road(index_per_road_and_per_month, 18)
+```
+
+
+# Samlet endring i trafikk på Nasjonal turistveg
+
+```{r table_index_all}
+index_summer_and_month %>%
+    flextable::flextable() %>%
+    fontsize(size = 12, part = "all") %>% 
+    set_header_labels(index_period = "Periode",
+                      summer = "juni - august") %>%
+    colformat_double(j = 2:5, big.mark = "", digits = 1) %>%
+    bold(part = "header") %>%
+    bg(bg = "#ED9300", part = "header") %>%
+    border_remove() %>%
+    hline_top(part = "header", border = borderline) %>%
+    hline_bottom(part = "all", border = borderline) %>%
+    padding(padding.top = .5,
+            padding.bottom = .3,
+            part = "body") %>%
+    #set_table_properties(width = .25,
+    #                     layout = "autofit") %>%
+    autofit(add_h = 0.2) %>%
+    #height_all(height = 5, part = "body") %>%
+    set_caption(caption = "Samlet endring i trafikkmengde (%) på alle Nasjonale turistveger.")
+```
 
