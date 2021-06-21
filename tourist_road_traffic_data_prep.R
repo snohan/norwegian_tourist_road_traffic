@@ -34,12 +34,12 @@ tourist_road_geometry %>%
   saveRDS(file = "data/tourist_road_geometry.rds")
 
 ## Names ----
-tourist_roads <- tourist_road_info$geometri %>%
+tourist_road_names <- tourist_road_info$geometri %>%
   sf::st_drop_geometry() %>%
   dplyr::select(objekt_id, Navn) %>%
   dplyr::arrange(Navn)
 
-tourist_roads %>%
+tourist_road_names %>%
   saveRDS(file = "data/tourist_road_names.rds")
 
 ## TRPs ----
@@ -93,23 +93,22 @@ mdts <- dplyr::bind_rows(
   mdt_2020,
   mdt_2021
 ) %>%
-  dplyr::filter(coverage > 50,
-                month %in% c(6, 7, 8)) %>%
+  dplyr::filter(coverage > 50) %>%
   dplyr::select(trp_id, year, month, mdt) %>%
   tidyr::complete(trp_id = trps_on_tourist_roads$trp_id, year, month)
 
-trp_mdt_wide <- trps_on_tourist_roads %>%
-  dplyr::left_join(mdts, by = "trp_id") %>%
-  dplyr::mutate(month_object = lubridate::make_date(year = year, month = month),
-                month_name = lubridate::month(month_object, label = TRUE, abbr = FALSE)) %>%
-  dplyr::select(Navn, trp_id, name, road_category_and_number, year, month_name, mdt) %>%
-  tidyr::pivot_wider(names_from = month_name, values_from = mdt) %>%
-  dplyr::select(Navn, name, road_category_and_number, year:august)
+# trp_mdt_wide <- trps_on_tourist_roads %>%
+#   dplyr::left_join(mdts, by = "trp_id") %>%
+#   dplyr::mutate(month_object = lubridate::make_date(year = year, month = month),
+#                 month_name = lubridate::month(month_object, label = TRUE, abbr = FALSE)) %>%
+#   dplyr::select(Navn, trp_id, name, road_category_and_number, year, month_name, mdt) %>%
+#   tidyr::pivot_wider(names_from = month_name, values_from = mdt) %>%
+#   dplyr::select(Navn, name, road_category_and_number, year:august)
 
 # TODO: sort på roadref
 
-trp_mdt_wide %>%
-  saveRDS(file = "data/trp_mdt_wide.rds")
+# trp_mdt_wide %>%
+#   saveRDS(file = "data/trp_mdt_wide.rds")
 
 trp_mdt_long <- trps_on_tourist_roads %>%
   dplyr::left_join(mdts, by = "trp_id") %>%
@@ -125,14 +124,15 @@ trp_mdt_long %>%
 # Point index ----
 pi_2019 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2019")
 pi_2020 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2020")
-#pi_2021 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2021")
+pi_2021 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2021")
 
 trp_id_objekt_id <- trps_on_tourist_roads %>%
   dplyr::select(trp_id, objekt_id)
 
 pis <- dplyr::bind_rows(
   pi_2019,
-  pi_2020
+  pi_2020,
+  pi_2021
   ) %>%
   dplyr::filter(month %in% c(6, 7, 8),
                 day_type == "ALL",
@@ -189,7 +189,7 @@ index_per_road <- pis %>%
 
 index_per_road_and_per_month <- index_per_road_month %>%
   dplyr::left_join(index_per_road, by = c("objekt_id", "index_period")) %>%
-  dplyr::left_join(tourist_roads, by = "objekt_id") %>%
+  dplyr::left_join(tourist_road_names, by = "objekt_id") %>%
   dplyr::select(-objekt_id) %>%
   dplyr::relocate(Navn, .before = index_period)
 
