@@ -418,9 +418,32 @@ create_index_table_for_a_road(index_per_road_and_per_month, 18)
 ```
 
 
-# Samlet endring i trafikk på Nasjonal turistveg
+# Endring i trafikk på Nasjonale turistveger oppsummert
 
 ```{r table_index_all}
+index_per_road_and_per_month %>%
+  dplyr::arrange(Navn) %>% 
+  flextable::flextable() %>%
+  fontsize(size = 12, part = "all") %>% 
+  set_header_labels(index_period = "Periode",
+                    summer = "juni - august") %>%
+  colformat_double(j = 3:6, big.mark = "", digits = 1) %>%
+  bold(part = "header") %>%
+  bg(bg = "#ED9300", part = "header") %>%
+  border_remove() %>%
+  hline_top(part = "header", border = borderline) %>%
+  hline_bottom(part = "all", border = borderline) %>%
+  padding(padding.top = .5,
+          padding.bottom = .3,
+          part = "body") %>%
+  autofit(add_h = 0.2) %>%
+  set_caption(caption = "Samlet endring i trafikkmengde (%) på de Nasjonale turistvegene.")
+```
+
+
+# Samlet endring i trafikk på Nasjonal turistveg
+
+```{r table_index_all_in_one}
 index_summer_and_month %>%
     flextable::flextable() %>%
     fontsize(size = 12, part = "all") %>% 
