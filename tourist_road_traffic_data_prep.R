@@ -5,6 +5,7 @@
 source("H:/Programmering/R/byindeks/get_from_trafficdata_api.R")
 source("H:/Programmering/R/byindeks/split_road_system_reference.R")
 source("H:/Programmering/R/byindeks/get_from_nvdb_api.R")
+library(writexl)
 #source("H:/Programmering/R/byindeks/index_report_functions.R")
 
 # Trps ----
@@ -195,6 +196,9 @@ index_per_road_and_per_month <- index_per_road_month %>%
 
 index_per_road_and_per_month %>%
   saveRDS(file = "data/index_per_road_and_per_month.rds")
+
+writexl::write_xlsx(index_per_road_and_per_month,
+                    path = "data/endring_i_trafikk_per_nasjonal_turistveg.xlsx")
 
 ## All roads in one ----
 index_per_month <- pis %>%
