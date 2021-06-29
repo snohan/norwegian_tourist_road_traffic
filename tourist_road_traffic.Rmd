@@ -38,6 +38,13 @@ index_per_road_and_per_month <-
 
 index_summer_and_month <-
   readRDS(file = "data/index_summer_and_month.rds")
+
+trp_chosen <-
+  readRDS(file = "data/trp_chosen.rds")
+
+summer_trp_chosen <-
+  readRDS(file = "data/summer_trp_chosen.rds")
+
 ```
 
 ```{r functions}
@@ -144,14 +151,25 @@ create_index_table_for_a_road <- function(index_df, tourist_road_number) {
     #height_all(height = 5, part = "body") %>%
     set_caption(caption = caption_text)
 }
+
+today_date <- lubridate::now()
+
+today_string <- paste0(
+  lubridate::day(today_date),
+  ". ",
+  lubridate::month(today_date, abbr = F, label = T),
+  ", ",
+  lubridate::year(today_date)
+)
 ```
 
 ```{r tourist_road_map}
 
 ```
 
-
 Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
+
+Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planalgte oppdateringer: 1. juli 2021, 2. august 2021, tidlig september 2021. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
 
 Mer informasjom om turistvegene finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
@@ -440,6 +458,34 @@ index_per_road_and_per_month %>%
   set_caption(caption = "Samlet endring i trafikkmengde (%) på de Nasjonale turistvegene.")
 ```
 
+# Et utvalgt punkt på hver turistveg
+Tabellen nedenfor viser det mest trafikkerte trafikkregistreringspunktet på hver Nasjonale turistveg. Trafikkmengden angis som månedsdøgntrafikk (MDT) som er gjennomsnittlig antall kjøretøypasseringer per dag.
+
+```{r trp_most_traffic}
+trp_chosen %>%
+  flextable::flextable() %>%
+  fontsize(size = 11, part = "all") %>% 
+  set_header_labels(Navn = "Nasjonal turistveg",
+                    road_category_and_number_and_point_name = "Veg, sted",
+                    mdt_2020 = "MDT\njuli 2020",
+                    index_2020 = "Endring\n2019-2020\n(%)",
+                    mdt_2021 = "MDT\njuli 2021",
+                    index_2021 = "Endring\n2020-2021\n(%)") %>%
+  colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
+  colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
+  bold(part = "header") %>%
+  bg(bg = "#ED9300", part = "header") %>%
+  border_remove() %>%
+  hline_top(part = "header", border = borderline) %>%
+  hline_bottom(part = "all", border = borderline) %>%
+  padding(padding.top = .5,
+          padding.bottom = .3,
+          part = "body") %>%
+  autofit(add_h = 0.2) %>%
+  set_caption(caption = "Det mest trafikkerte trafikkregistreringspunktet per Nasjonale turistveg.")
+```
+
+
 
 # Samlet endring i trafikk på Nasjonal turistveg
 
@@ -463,5 +509,32 @@ index_summer_and_month %>%
     autofit(add_h = 0.2) %>%
     #height_all(height = 5, part = "body") %>%
     set_caption(caption = "Samlet endring i trafikkmengde (%) på alle Nasjonale turistveger.")
+```
+
+# Utvalgte punkter på andre veger
+Et lite utvalg trafikkregistreringspunkter på veger som også er mye brukt i sommerferien.
+
+```{r other_trps}
+summer_trp_chosen %>%
+  flextable::flextable() %>%
+  fontsize(size = 11, part = "all") %>% 
+  set_header_labels(road_category_and_number_and_point_name = "Veg, sted",
+                    nearby_name = "Område",
+                    mdt_2020 = "MDT\njuli 2020",
+                    index_2020 = "Endring\n2019-2020\n(%)",
+                    mdt_2021 = "MDT\njuli 2021",
+                    index_2021 = "Endring\n2020-2021\n(%)") %>%
+  colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
+  colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
+  bold(part = "header") %>%
+  bg(bg = "#ED9300", part = "header") %>%
+  border_remove() %>%
+  hline_top(part = "header", border = borderline) %>%
+  hline_bottom(part = "all", border = borderline) %>%
+  padding(padding.top = .5,
+          padding.bottom = .3,
+          part = "body") %>%
+  autofit(add_h = 0.2) %>%
+  set_caption(caption = "Utvalgte trafikkregistreringspunkter på typiske ferieveger.")
 ```
 
