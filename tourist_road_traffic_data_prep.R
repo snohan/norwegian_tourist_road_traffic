@@ -117,7 +117,7 @@ trp_mdt_long <- trps_on_tourist_roads %>%
                 month_name = lubridate::month(month_object, label = TRUE, abbr = FALSE)) %>%
   dplyr::select(Navn, trp_id, road_category_and_number_and_point_name, year, month_object, mdt)
 
-# TODO: sort på roadref
+# TODO: sort by roadref
 
 trp_mdt_long %>%
   saveRDS(file = "data/trp_mdt_long.rds")

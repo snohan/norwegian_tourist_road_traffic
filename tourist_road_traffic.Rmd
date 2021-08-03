@@ -169,7 +169,7 @@ today_string <- paste0(
 
 Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
 
-Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planalgte oppdateringer: 2. august 2021, tidlig september 2021. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
+Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planlagte oppdateringer: tidlig september 2021. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
 
 Mer informasjom om turistvegene finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
