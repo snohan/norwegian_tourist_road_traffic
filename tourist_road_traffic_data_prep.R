@@ -26,6 +26,7 @@ points_metadata <- points %>%
 
 # Tourist road info ----
 tourist_road_info <- get_national_tourist_roads()
+# If you do not need to update, just read RDS files from within RMD file
 
 ## Geometry ----
 # NB! Never view the geometry - slows everything!
@@ -121,6 +122,9 @@ trp_mdt_long <- trps_on_tourist_roads %>%
 
 trp_mdt_long %>%
   saveRDS(file = "data/trp_mdt_long.rds")
+
+writexl::write_xlsx(trp_mdt_long,
+                    path = "data/nasjonal_turistveg_mdt.xlsx")
 
 # Point index ----
 pi_2019 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2019")
