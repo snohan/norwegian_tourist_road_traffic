@@ -169,7 +169,7 @@ today_string <- paste0(
 
 Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
 
-Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planlagte oppdateringer: juni 2022. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
+Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planlagte oppdateringer: september 2022. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
 
 Mer informasjom om turistvegene finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
@@ -462,15 +462,39 @@ index_per_road_and_per_month %>%
 Tabellen nedenfor viser det mest trafikkerte trafikkregistreringspunktet på hver Nasjonale turistveg. Trafikkmengden angis som månedsdøgntrafikk (MDT) som er gjennomsnittlig antall kjøretøypasseringer per dag.
 
 ```{r trp_most_traffic}
+# trp_chosen %>%
+#   flextable::flextable() %>%
+#   fontsize(size = 11, part = "all") %>% 
+#   set_header_labels(Navn = "Nasjonal turistveg",
+#                     road_category_and_number_and_point_name = "Veg, sted",
+#                     mdt_2020 = "MDT\njuli 2020",
+#                     index_2020 = "Endring\n2019-2020\n(%)",
+#                     mdt_2021 = "MDT\njuli 2021",
+#                     index_2021 = "Endring\n2020-2021\n(%)") %>%
+#   colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
+#   colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
+#   bold(part = "header") %>%
+#   bg(bg = "#ED9300", part = "header") %>%
+#   border_remove() %>%
+#   hline_top(part = "header", border = borderline) %>%
+#   hline_bottom(part = "all", border = borderline) %>%
+#   padding(padding.top = .5,
+#           padding.bottom = .3,
+#           part = "body") %>%
+#   autofit(add_h = 0.2) %>%
+#   set_caption(caption = "Det mest trafikkerte trafikkregistreringspunktet per Nasjonale turistveg.")
+```
+
+```{r trp_most_traffic_2022}
 trp_chosen %>%
   flextable::flextable() %>%
   fontsize(size = 11, part = "all") %>% 
   set_header_labels(Navn = "Nasjonal turistveg",
                     road_category_and_number_and_point_name = "Veg, sted",
-                    mdt_2020 = "MDT\njuli 2020",
-                    index_2020 = "Endring\n2019-2020\n(%)",
                     mdt_2021 = "MDT\njuli 2021",
-                    index_2021 = "Endring\n2020-2021\n(%)") %>%
+                    index_2021 = "Endring\n2020-2021\n(%)",
+                    mdt_2022 = "MDT\njuli 2022",
+                    index_2022 = "Endring\n2021-2022\n(%)") %>%
   colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
   colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
   bold(part = "header") %>%
@@ -484,8 +508,6 @@ trp_chosen %>%
   autofit(add_h = 0.2) %>%
   set_caption(caption = "Det mest trafikkerte trafikkregistreringspunktet per Nasjonale turistveg.")
 ```
-
-
 
 # Samlet endring i trafikk på Nasjonal turistveg
 
@@ -515,15 +537,39 @@ index_summer_and_month %>%
 Et lite utvalg trafikkregistreringspunkter på veger som også er mye brukt i sommerferien.
 
 ```{r other_trps}
+# summer_trp_chosen %>%
+#   flextable::flextable() %>%
+#   fontsize(size = 11, part = "all") %>% 
+#   set_header_labels(road_category_and_number_and_point_name = "Veg, sted",
+#                     nearby_name = "Område",
+#                     mdt_2020 = "MDT\njuli 2020",
+#                     index_2020 = "Endring\n2019-2020\n(%)",
+#                     mdt_2021 = "MDT\njuli 2021",
+#                     index_2021 = "Endring\n2020-2021\n(%)") %>%
+#   colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
+#   colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
+#   bold(part = "header") %>%
+#   bg(bg = "#ED9300", part = "header") %>%
+#   border_remove() %>%
+#   hline_top(part = "header", border = borderline) %>%
+#   hline_bottom(part = "all", border = borderline) %>%
+#   padding(padding.top = .5,
+#           padding.bottom = .3,
+#           part = "body") %>%
+#   autofit(add_h = 0.2) %>%
+#   set_caption(caption = "Utvalgte trafikkregistreringspunkter på typiske ferieveger.")
+```
+
+```{r other_trps_2022}
 summer_trp_chosen %>%
   flextable::flextable() %>%
   fontsize(size = 11, part = "all") %>% 
   set_header_labels(road_category_and_number_and_point_name = "Veg, sted",
                     nearby_name = "Område",
-                    mdt_2020 = "MDT\njuli 2020",
-                    index_2020 = "Endring\n2019-2020\n(%)",
                     mdt_2021 = "MDT\njuli 2021",
-                    index_2021 = "Endring\n2020-2021\n(%)") %>%
+                    index_2021 = "Endring\n2020-2021\n(%)",
+                    mdt_2022 = "MDT\njuli 2022",
+                    index_2022 = "Endring\n2021-2022\n(%)") %>%
   colformat_double(j = c(3,5), big.mark = " ", digits = 0) %>%
   colformat_double(j = c(4,6), big.mark = "", digits = 1) %>%
   bold(part = "header") %>%
@@ -537,4 +583,5 @@ summer_trp_chosen %>%
   autofit(add_h = 0.2) %>%
   set_caption(caption = "Utvalgte trafikkregistreringspunkter på typiske ferieveger.")
 ```
+
 
