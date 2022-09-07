@@ -45,6 +45,9 @@ trp_chosen <-
 summer_trp_chosen <-
   readRDS(file = "data/summer_trp_chosen.rds")
 
+summer_trp_mdt_long <-
+  readRDS(file = "data/summer_trp_mdt_long.rds")
+
 ```
 
 ```{r functions}
@@ -169,7 +172,7 @@ today_string <- paste0(
 
 Det er `r nrow(tourist_road_names)` Nasjonale turistveger i Norge. Denne rapporten tar for seg trafikkutviklingen de siste årene, med spesielt fokus på sommertrafikken (juni - august). 
 
-Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planlagte oppdateringer: september 2022. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
+Alle data er hentet fra [www.vegvesen.no/trafikkdata/](https://www.vegvesen.no/trafikkdata/), og sist oppdatert `r today_string`. Nærmeste planlagte oppdateringer: juli/august 2023. Kontakt gjerne 'trafikkdata' snabela vegvesen punktum no ved spørsmål.
 
 Mer informasjom om turistvegene finnes på [www.nasjonaleturistveger.no](https://www.nasjonaleturistveger.no/).
 
@@ -584,4 +587,43 @@ summer_trp_chosen %>%
   set_caption(caption = "Utvalgte trafikkregistreringspunkter på typiske ferieveger.")
 ```
 
+
+```{r plot_other, fig.height=10}
+min_month_object_chosen <- min(summer_trp_mdt_long$month_object)
+max_month_object_chosen <- max(summer_trp_mdt_long$month_object)
+  
+  summer_trp_mdt_long %>% 
+    dplyr::mutate(
+      year = as.character(year)
+    ) %>% 
+    ggplot2::ggplot(aes(x = month_object, y = mdt, fill = year)) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::facet_grid(
+      rows = vars(road_category_and_number_and_point_name),
+      labeller = label_wrap_gen(width = 12)
+    ) +
+    theme_light(base_size = 10) +
+    theme(axis.text.x = element_text(angle = 90),
+          axis.ticks.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          strip.text.y = element_text(angle = 90),
+          strip.background = element_rect(fill = "#444f55"),
+          plot.background = element_rect(fill = svv_background_color),
+          panel.background = element_rect(fill = svv_background_color),
+          legend.position = "bottom",
+          legend.background = element_rect(fill = svv_background_color),
+          legend.key = element_blank()) +
+    scale_x_date(
+      breaks = scales::breaks_width("months"),
+      labels = scales::label_date("%b"),
+      limits = c(min_month_object_chosen, max_month_object_chosen)) +
+    scale_fill_viridis_d(name = "År",
+                         option = "cividis") +
+    labs(x = NULL, y = "Månedsdøgntrafikk \n",
+         caption = "Data: Statens vegvesen og fylkeskommunene") +
+    ggtitle("Gjennomsnittlig antall kjøretøy per dag",
+            subtitle = "")
+```
 

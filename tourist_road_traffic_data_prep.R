@@ -165,10 +165,29 @@ trp_mdt_long <-
 trp_mdt_long %>%
   saveRDS(file = "data/trp_mdt_long.rds")
 
-writexl::write_xlsx(
-  trp_mdt_long,
-  path = "data/nasjonal_turistveg_mdt.xlsx"
-)
+
+# File for the web journalists
+trp_mdt_long |>
+  dplyr::filter(
+    year %in% c(2021, 2022)
+  ) |>
+  dplyr::mutate(
+    month_name = lubridate::month(month_object, label = TRUE)
+  ) |>
+  dplyr::filter(
+    month_name %in% c("jun", "jul", "aug")
+  ) |>
+  dplyr::select(
+    Turistveg = Navn,
+    Veg_og_punkt = road_category_and_number_and_point_name,
+    Ar = year,
+    Maned = month_name,
+    MDT = mdt
+  ) |>
+  writexl::write_xlsx(
+    path = "data/nasjonal_turistveg_mdt.xlsx"
+  )
+
 
 # Point index ----
 pi_2019 <- get_pointindices_for_trp_list(trps_on_tourist_roads$trp_id, "2019")
@@ -359,8 +378,10 @@ index_per_road_and_per_month <-
 index_per_road_and_per_month %>%
   saveRDS(file = "data/index_per_road_and_per_month.rds")
 
-writexl::write_xlsx(index_per_road_and_per_month,
-                    path = "data/endring_i_trafikk_per_nasjonal_turistveg.xlsx")
+writexl::write_xlsx(
+  index_per_road_and_per_month,
+  path = "data/endring_i_trafikk_per_nasjonal_turistveg.xlsx"
+)
 
 ## All roads in one ----
 index_per_month <-
@@ -489,6 +510,9 @@ summer_trp_mdt_long <-
     month_object,
     mdt
   )
+
+summer_trp_mdt_long %>%
+  saveRDS(file = "data/summer_trp_mdt_long.rds")
 
 summer_pi_2020 <- get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2020")
 summer_pi_2021 <- get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2021")
