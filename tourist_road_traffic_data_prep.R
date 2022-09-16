@@ -227,6 +227,9 @@ pis <- dplyr::bind_rows(
 pis %>%
   saveRDS(file = "data/pis.rds")
 
+pis <-
+  readRDS(file = "data/pis.rds")
+
 
 # TRPs with most traffic and their July data ----
 trp_most_traffic <-
@@ -514,9 +517,15 @@ summer_trp_mdt_long <-
 summer_trp_mdt_long %>%
   saveRDS(file = "data/summer_trp_mdt_long.rds")
 
-summer_pi_2020 <- get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2020")
-summer_pi_2021 <- get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2021")
-summer_pi_2022 <- get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2022")
+summer_trp_mdt_long <-
+  readRDS(file = "data/summer_trp_mdt_long.rds")
+
+summer_pi_2020 <-
+  get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2020")
+summer_pi_2021 <-
+  get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2021")
+summer_pi_2022 <-
+  get_pointindices_for_trp_list(summer_trps_meta_data$trp_id, "2022")
 
 summer_pis <-
   dplyr::bind_rows(
@@ -533,7 +542,9 @@ summer_pis <-
     trp_id,
     year,
     month,
-    index = index_total_p
+    index = index_total_p,
+    base_volume,
+    calculation_volume
   )
 
 summer_trp_chosen <-
@@ -562,3 +573,235 @@ summer_trp_chosen <-
 
 summer_trp_chosen %>%
   saveRDS(file = "data/summer_trp_chosen.rds")
+
+
+# Chosen TRPs all summer ----
+# Make Excel sheet with TRPs for the web journalists
+
+trp_most_traffic_all_summer <-
+  trp_mdt_long %>%
+  dplyr::mutate(
+    month = lubridate::month(month_object)
+  ) %>%
+  dplyr::filter(
+    year %in% c(2022),
+    month %in% c(6, 7, 8)
+  ) %>%
+  # Ensure value in all months in previous year
+  dplyr::left_join(
+    pis,
+    by = c("trp_id", "year", "month")
+  ) %>%
+  dplyr::filter(
+    !is.na(index_total_p)
+  ) |>
+  dplyr::group_by(
+    Navn,
+    trp_id
+  ) |>
+  dplyr::summarise(
+    mean_mdt =
+      base::mean(
+        mdt,
+        na.rm = FALSE # Ensuring values in all three months
+      ),
+    n_months = n(),
+    .groups = "drop_last"
+  ) |>
+  dplyr::filter(
+    n_months == 3
+  ) |>
+  dplyr::slice_max(order_by = mean_mdt)
+
+
+trp_chosen_all_summer_month <-
+  trp_mdt_long %>%
+  dplyr::mutate(
+    month = lubridate::month(month_object)
+  ) %>%
+  dplyr::filter(
+    year %in% c(2022),
+    month %in% c(6, 7, 8),
+    trp_id %in% trp_most_traffic_all_summer$trp_id
+  ) %>%
+  dplyr::left_join(
+    pis,
+    by = c("trp_id", "year", "month")
+  ) %>%
+  dplyr::mutate(
+    months =
+      lubridate::month(
+        month_object,
+        label = TRUE,
+        abbr = TRUE
+      ),
+    index = index_total_p |> round(digits = 1)
+  ) |>
+  dplyr::select(
+    #objekt_id,
+    area = Navn,
+    #trp_id,
+    road_category_and_number_and_point_name,
+    #year,
+    months,
+    mdt,
+    index
+  ) %>%
+  # tidyr::pivot_wider(
+  #   names_from = year,
+  #   values_from = c(mdt, index)
+  # ) %>%
+  dplyr::arrange(area)
+
+
+trp_chosen_all_summer_whole <-
+  trp_mdt_long %>%
+  dplyr::mutate(
+    month = lubridate::month(month_object)
+  ) %>%
+  dplyr::filter(
+    year %in% c(2022),
+    month %in% c(6, 7, 8),
+    trp_id %in% trp_most_traffic_all_summer$trp_id
+  ) %>%
+  dplyr::left_join(
+    pis,
+    by = c("trp_id", "year", "month")
+  ) %>%
+  dplyr::group_by(
+    Navn,
+    road_category_and_number_and_point_name,
+    year
+  ) %>%
+  dplyr::summarise(
+    base_volume = sum(base_volume, na.rm = TRUE),
+    calculation_volume = sum(calculation_volume, na.rm = TRUE),
+    index_i = calculation_volume / base_volume,
+    index_p = round((index_i - 1) * 100, digits = 1),
+    mean_mdt = round(mean(mdt))
+  ) %>%
+  dplyr::mutate(
+    index_period = paste0(year - 1, " - ", year),
+    months = "jun-aug"
+  ) %>%
+  dplyr::ungroup() |>
+  dplyr::select(
+    #objekt_id,
+    area = Navn,
+    #trp_id,
+    road_category_and_number_and_point_name,
+    #year,
+    months,
+    mdt = mean_mdt,
+    index = index_p
+  ) %>%
+  dplyr::arrange(area)
+
+
+trp_chosen_all_summer <-
+  dplyr::bind_rows(
+    trp_chosen_all_summer_month,
+    trp_chosen_all_summer_whole
+  ) |>
+  dplyr::mutate(
+    area_type = "Nasjonal turistveg"
+  )
+
+# Summer TRPs
+summer_trp_month <-
+  summer_trp_mdt_long %>%
+  dplyr::mutate(
+    month = lubridate::month(month_object)
+  ) %>%
+  dplyr::filter(
+    year %in% c(2022),
+    month %in% c(6, 7, 8)
+  ) %>%
+  dplyr::left_join(
+    summer_pis,
+    by = c("trp_id", "year", "month")
+  ) %>%
+  dplyr::mutate(
+    months =
+      lubridate::month(
+        month_object,
+        label = TRUE,
+        abbr = TRUE
+      ),
+    index = index |> round(digits = 1)
+  ) |>
+  dplyr::select(
+    area = nearby_name,
+    road_category_and_number_and_point_name,
+    months,
+    mdt,
+    index
+  )
+
+summer_trp_whole <-
+  summer_trp_mdt_long %>%
+  dplyr::mutate(
+    month = lubridate::month(month_object)
+  ) %>%
+  dplyr::filter(
+    year %in% c(2022),
+    month %in% c(6, 7, 8)
+  ) %>%
+  dplyr::left_join(
+    summer_pis,
+    by = c("trp_id", "year", "month")
+  ) %>%
+  dplyr::group_by(
+    nearby_name,
+    road_category_and_number_and_point_name,
+    year
+  ) %>%
+  dplyr::summarise(
+    base_volume = sum(base_volume, na.rm = TRUE),
+    calculation_volume = sum(calculation_volume, na.rm = TRUE),
+    index_i = calculation_volume / base_volume,
+    index_p = round((index_i - 1) * 100, digits = 1),
+    mean_mdt = round(mean(mdt))
+  ) %>%
+  dplyr::mutate(
+    index_period = paste0(year - 1, " - ", year),
+    months = "jun-aug"
+  ) %>%
+  dplyr::ungroup() |>
+  dplyr::select(
+    #objekt_id,
+    area = nearby_name,
+    #trp_id,
+    road_category_and_number_and_point_name,
+    #year,
+    months,
+    mdt = mean_mdt,
+    index = index_p
+  ) %>%
+  dplyr::arrange(area)
+
+
+summer_trp_all <-
+  dplyr::bind_rows(
+    summer_trp_month,
+    summer_trp_whole
+  ) |>
+  dplyr::mutate(
+    area_type = "Annen ferieveg"
+  )
+
+
+dplyr::bind_rows(
+  trp_chosen_all_summer,
+  summer_trp_all
+  ) |>
+  dplyr::relocate(
+    area_type,
+    .before = area
+  ) |>
+  writexl::write_xlsx(
+    path = "data/utvalgte_sommerveger.xlsx"
+  )
+
+
+# TODO: other summer TRPs
